@@ -1,7 +1,6 @@
 package streamer.videoaudio.android.com.videoaudiostreaming;
 
 import android.content.Context;
-import android.media.AudioDeviceCallback;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -42,6 +41,9 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
     private boolean isPrepared = false;
     AudioManager am = null;
 
+    String video_url = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
+    String audio_url = "http://www.stephaniequinn.com/Music/Allegro%20from%20Duet%20in%20C%20Major.mp3";
+
 
 
     public LauncherActivityFragment() {
@@ -54,8 +56,7 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
             mediaPlayer = new MediaPlayer();
             mHandler = new Handler();
             am = (AudioManager)getActivity().getSystemService(Context.AUDIO_SERVICE);
-            int result = am.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN);
+        initMediaPlayer();
 
     }
 
@@ -65,6 +66,15 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
         View view =  inflater.inflate(R.layout.fragment_launcher, container, false);
         return view;
     }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        int result = am.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN);
+    }
+
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -85,7 +95,6 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
     }
 
     private void initMediaPlayer(){
-            mediaPlayer.setDisplay(mHolder);
             mediaPlayer.setOnPreparedListener(this);
             mediaPlayer.setOnBufferingUpdateListener(this);
             mediaPlayer.setOnCompletionListener(this);
@@ -145,9 +154,10 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
             }else {
                 mClick.setText("Pause");
                 if(!isPrepared) {
-                    mediaPlayer.setDataSource(getActivity() , Uri.parse("http://www.stephaniequinn.com/Music/Allegro%20from%20Duet%20in%20C%20Major.mp3"));
+                    mediaPlayer.setDisplay(mHolder);
+                    mediaPlayer.setDataSource(getActivity() , Uri.parse(video_url));
                     mProgressBar.setVisibility(View.VISIBLE);
-                    mediaPlayer.prepare();
+                    mediaPlayer.prepareAsync();
                 }else{
                     mediaPlayer.start();
                 }
@@ -159,10 +169,7 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        initMediaPlayer();
-
-
-
+        mediaPlayer.setDisplay(holder);
     }
 
     @Override
@@ -198,19 +205,10 @@ public class LauncherActivityFragment extends Fragment implements SurfaceHolder.
     @Override
     public void onAudioFocusChange(int focusChange) {
 
-        Log.d("anurag"," focus change" + focusChange);
-
-        if(focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
-        {
-            mediaPlayer.pause();
-        }
-        else if(focusChange == AudioManager.AUDIOFOCUS_GAIN)
-        {
-            mediaPlayer.setVolume(0.5f, 0.5f);
+        Log.d("anurag", " focus change" + focusChange);
+        if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
             mediaPlayer.start();
-        }
-        else if(focusChange == AudioManager.AUDIOFOCUS_LOSS)
-        {
+        } else {
             mediaPlayer.pause();
         }
     }
